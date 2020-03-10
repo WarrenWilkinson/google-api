@@ -5,7 +5,7 @@
 ;; Author: Warren Wilkinson <warrenwilkinson@gmail.com>
 ;; Maintainer: Warren Wilkinson <warrenwilkinson@gmail.com>
 ;; Created: 20 Feb 2020
-;; Version: 0.1
+;; Version: 20200221
 ;; Keywords: extensions
 ;; Homepage: http://example.com/foo
 ;; Package-Requires: (url)
@@ -34,46 +34,25 @@
 ;; https://developers.google.com/discovery/v1/reference/apis
 ;; https://developers.google.com/api-client-library
 
-;; Okay, what do I want to do with it?
-;; Probably just evaluate it...
-
-;; Okay, I've got a lot of things in an alist...
-;; revision, documentationLink, id... basepath,
-;; schemas... whatever those are.... okay,
-;; and I need to define some kind of operation
-;; upon these.. but I don't know precisely what.
-;; But I'd like to get the data out into a format
-;; I can use...
-;; What kind of rules?
-;; what kind of operation to understand this tree?
-;; a PATH is useful...
-;; so I can say "basePath"..
-;; but recursion is probably sufficient...
-;; with root...
-;; for-each ... thing...
-;; etc....
-;;
-;; Okay, you can imagine that I COULD parse a schema..
-;; but is that really what I want?  More or less, don't I
-;; just want to inquire about something? or find a certain
-;; schema?  I want to make it easy for users... a structure
-;; isn't easy because it's not defined.  Need to stay
-;; flexible.
-;;
-;; I need two things... I need to be able to DESCRIBE a
-;; thing, and to verify what the user gives me adheres to it.
-;; SO, to each request, I should just attach the SCHEMA in the right place.
+;; Basically, we download the google Discovery Document,
+;; and then write out Emacs Lisp code that serves as a library
+;; for accessing it.
 
 ;;; Code:
 
 (require 'url)
 
-(defvar google-discovery-documents
-  '("https://translation.googleapis.com/$discovery/rest?version=v3")
-  "A list of discovery documents to process.")
+(defvar google-default-timeout 10 "The default timeout the API uses when a custom request-callback has not been provided.")
 
-(defun google--ensure-list (thing)
-  (if (listp thing) thing (list thing)))
+(eval-when-compile
+  (defun google--ensure-list (thing)
+    (if (listp thing) thing (list thing))))
+
+(defun google--indent-by-two (string)
+  (replace-regexp-in-string "\n" "\n  " string t t))
+
+(defun google--escape-dbl-quotes (string)
+  (replace-regexp-in-string "\"" "\\\"" string t t))
 
 (defmacro with--google-json-bind (fields thing &rest body)
   "A macro for extracting and binding values from Json."
@@ -93,23 +72,25 @@
        ,@body)))
 (put 'with--google-json-bind 'lisp-indent-function 2)
 
+;; ** Programmatic Interface Dynamic Variables Available to callbacks **
+(defvar google--schemas)
+(defvar google--parameters)
+(defvar google--url)
+(defvar google--path nil "List of (ResourceKey . Json)")
+(defvar google--json nil "Toplevel Json")
+(defvar google--output-directory default-directory)
+
 ;; ** Code Writer **
 (defvar google--buffer nil)
+(defvar google--beginning-of-code-section nil "The beginning of the code section. The encoders/decoders are placed at the beginning.")
+(defvar google--required-encoders nil "The names of resources are pushed onto this by emit-method as it's determined we need a specific encoder.")
+(defvar google--required-decoders nil "The names of resources are pushed onto this by emit-method as it's determined we need a specific decoder.")
+
 (defun google--open-and-truncate-file-for-discovery-document (json)
-  (with--google-json-bind (name version title description) json
-    (let ((file-name (concat "google-" name "-" version ".el")))
-    ;; revision
-    ;; 			   ;;documentationLink
-    ;; 			   ;;id
-    ;; 			   schemas protocol
-    ;; 				   ;;canonicalName auth
-    ;; 				   rootUrl
-    ;; 				   ;;ownerDoman
-    ;; 				   ;;name batchPath title
-    ;; 				   resources parameters
-    ;; 				   ;;version kind description
-    ;; 				   servicePath) json
-      (setf google--buffer (find-file-literally file-name))
+  (with--google-json-bind (name version title description documentationLink revision) json
+    (let* ((file-name (concat "google-" name "-" version ".el"))
+	   (file-path (concat google--output-directory file-name)))
+      (setf google--buffer (find-file-literally file-path))
       (with-current-buffer google--buffer
 	(erase-buffer)
 	(lisp-mode)
@@ -117,10 +98,7 @@
 	(insert ";; Copyright (C) 2020-2020 Warren Wilkinson\n\n")
 	(insert ";; Author: Warren Wilkinson <warrenwilkinson@gmail.com>\n")
 	(insert ";; Maintainer: Warren Wilkinson <warrenwilkinson@gmail.com>\n")
-	;; (insert ";; Created: 20 Feb 2020")
-	;; (insert ";; Version: 0.1")
 	(insert ";; Keywords: extensions\n")
-	;; Homepage: http://example.com/foo
 	(insert ";; Package-Requires: (url)\n\n")
 	(insert ";; This file is not part of GNU Emacs.\n\n")
 	(insert ";; This file is part of the Emacs-Google-Api.\n\n")
@@ -135,33 +113,251 @@
 	(insert ";; You should have received a copy of the GNU General Public License\n")
 	(insert ";; along with Emacs-Google-Api.  If not, see <https://www.gnu.org/licenses/>.\n\n")
 	(insert ";;; Commentary:\n\n")
-	(insert ";; " description "\n\n")
-	(insert ";;; Code:\n\n")))))
+	(insert ";; " description "\n")
+	(insert ";; Usage: " documentationLink "\n")
+	(insert ";; Revision: " revision "\n\n")
+	(insert ";;; Code:\n")
+	(setq google--beginning-of-code-section (point))
+	(insert "\n")))))
 
-(defun google--save-and-kill-discovery-document-buffer (json)
+(defun google--ref-p (ref)
+  (assert (listp ref)) ;; So far, I've only see refs as either nil or 1 element lists.
+  (assert (or (null ref) (= 1 (length ref))))
+  (if (null ref)
+      nil
+    (let ((value (assoc '$ref ref)))
+      (assert value)
+      (assert (stringp (cdr value)))
+      (intern (cdr value)))))
+
+(defun google--ref-target (ref)
+  (google--ref-p ref))
+
+(defun google--name-of-structure-json-encoder (google-api-name google-api-version structure-name)
+  (assert (symbolp structure-name))
+  (intern (concat "google--" google-api-name "-" google-api-version ":structure-encode:"  (symbol-name structure-name))))
+
+(defun google--name-of-structure-json-decoder (google-api-name google-api-version structure-name)
+  (assert (symbolp structure-name))
+  (intern (concat "google--" google-api-name "-" google-api-version ":structure-decode:"  (symbol-name structure-name))))
+
+(defun google--name-of-structure-metadata-variable (google-api-name google-api-version structure-name)
+  (assert (symbolp structure-name))
+  (intern (concat "google--" google-api-name "-" google-api-version ":structure-metadata:"  (symbol-name structure-name))))
+
+(defun google--get-schema-by-name (schema-name)
+  (let ((found (assoc schema-name google--schemas)))
+    (if found
+	(cdr found)
+      (error "Could not find schema %s. Got %s. Known schemas are: %s" schema-name found (mapcar 'first google--schemas)))))
+
+;; encoders and decoders
+;;
+;; Okay, so the google discovery document doesn't tell us which fields of the schemas are required and which are optional (it's
+;; in the documentation string, not in the metadata). Additionally, it's conceivable a user might provide extra fields that aren't documented or
+;; are left-over from upgrading code.  Finally, some fields are marked "output only", which means that they're not intended to be present.
+;;
+;; Due to all these concerns, I don't bother checking the json --
+;; neither the outgoing nor the incoming. Instead we emit a nice
+;; doc-string so the user can hopefully piece together what should be
+;; there, and then just json-encode/decode whatever we get.
+
+(defun google--emit-function (function-name documentation properties args expressions)
+  (let ((doc-string (if properties
+			(concat documentation "\n\nAlist Parameters:")
+		      (concat documentation "\n\nNO PARAMETERS."))))
+    (map nil (lambda (property)
+	       (with--google-json-bind (description type properties id) (cdr property)
+		 (setf doc-string (concat doc-string (google--indent-by-two (format "\n\n * %s (%s): %s" (car property) type (google--indent-by-two description)))))))
+	 properties)
+    (with-current-buffer google--buffer
+      (insert "\n(defun " (symbol-name function-name) " (" (mapconcat 'prin1-to-string args " ") ")\n  \"" (google--escape-dbl-quotes (google--indent-by-two doc-string)) "\"")
+      (insert (google--indent-by-two (concat "\n" (mapconcat 'pp-to-string expressions "\n"))))
+      (let ((end (point)))
+	(search-backward ")")
+	(delete-region (point) end)
+	(insert "))\n")))))
+
+(defun google--emit-decoder (schema-name)
+  (with--google-json-bind (name version) google--json
+    (let ((function-name (google--name-of-structure-json-decoder name version schema-name))
+	  (schema (google--get-schema-by-name schema-name)))
+      (with--google-json-bind (description type properties id) schema
+	(assert (string= schema-name id))
+	(assert (string= type "object"))
+	(google--emit-function function-name description properties '() '((json-read)))))))
+
+(defun google--emit-encoder (schema-name)
+  (with--google-json-bind (name version) google--json
+    (let ((function-name (google--name-of-structure-json-encoder name version schema-name))
+	  (schema (google--get-schema-by-name schema-name)))
+      (with--google-json-bind (description type properties id) schema
+	(assert (string= schema-name id))
+	(assert (string= type "object"))
+	(google--emit-function function-name description properties '(alist) '((encode-coding-string (json-encode alist) 'utf-8)))))))
+
+(defun google--emit-encoders-and-decoders-save-and-kill-discovery-document-buffer (json)
   (with-current-buffer google--buffer
+    (goto-char google--beginning-of-code-section)
+    (insert "\n;; Json Decoders\n")
+    (map nil 'google--emit-decoder (sort google--required-decoders 'string<))
+    (insert "\n;; Json Encoders\n")
+    (map nil 'google--emit-encoder (sort google--required-encoders 'string<))
     (basic-save-buffer)
     (kill-buffer)
     (setf google--buffer nil)))
 
-(defun no-op (a b) nil)
+(defun google--create-section-for-resource (resourceKey json)
+  (with-current-buffer google--buffer
+    (insert "\n;; Resource " (mapconcat 'symbol-name (nreverse (mapcar 'car google--path)) ".")
+	    ":\n")))
 
-;; ** Programmers interface. **
+(defun google--close-section-for-resource (resourceKey json)
+  (with-current-buffer google--buffer
+    ;; (insert "\n")
+    ))
+
+(defvar rfc6570-reserved-characters (list ?: ?/ ?? ?# ?[ ?] ?@
+					  ?! ?$ ?& ?' ?( ?)
+					  ?* ?+ ?, 59 ?=)) ;; 59 is ?; but using  latter wrecks syntax highlighting and indentation.
+
+(defmacro google--push/concat (value place)
+  (let ((v (gensym)))
+    `(let ((,v ,value))
+       (if (and (stringp ,v) (stringp (car ,place)))
+	   (setf ,place (cons (concat (car ,place) ,v) (cdr ,place)))
+	 (push ,v ,place)))))
+
+(defun google--build-url-expression (&rest url-fragments)
+  "Given a set of url-fragments, each with zero or more fancy {+variable} markers, returns a lisp expression
+   which can evaluate and return the final string.
+
+   For example, if called with: 'http://root.com/' 'api/v3/{+hello}/how/are/' '{you}', it would return:
+   (list 'http://root.com/api/v3/' '(expand hello) '/how/are/' '(expand you))"
+  (let ((fragments
+	 (mapcan #'(lambda (fragment)
+		     (let ((results nil)
+			   (search-start 0))
+		       (while (string-match "{[^}]*}" fragment search-start)
+			 (let ((start (match-beginning 0))
+			       (end (match-end 0)))
+			   (when (> start 0)
+			     (push (subseq fragment 0 start) results))
+			   (setf search-start end)
+			   ;; Handle expression, level 2 only...
+			   (push
+			    (case (elt fragment (+ 1 start))
+			      (?+ `(rfc6570-expand-reserved ,(intern (subseq fragment (+ 2 start) (- end 1)))))
+			      (?# (push "#" results)
+				  `(rfc6570-expand-fragment-identfier ,(intern (subseq fragment (+ 2 start) (- end 1)))))
+			      (otherwise
+			       `(rfc6570-expand-basic ,(intern (subseq fragment (+ 1 start) (- end 1))))))
+			    results)))
+		       (when (< search-start (length fragment))
+			 (push (subseq fragment search-start) results))
+		       (nreverse results)))
+		 url-fragments))
+	(results))
+    (dolist (element fragments (nreverse results))
+      (if (and (stringp element) (stringp (car results)))
+	  (setf (car results) (concat (car results) element))
+	(push element results)))))
+
+(defun google--get-alist (variable alist required type pattern)
+  "Extract variable from the users provided alist, ensuring it is
+   there if it's required, has the right type and fits the pattern.
+
+   The only supported type is \"string\" and pattern is a regular
+   expression on it."
+  (let ((binding (assoc variable alist)))
+    (when (and (null binding) required)
+      (error "Required variable %s was not found." variable))
+    (let ((value (cdr binding)))
+      (when value
+	(cond ((string-equal type "string")
+	       (unless (stringp value)
+		 (error "Variable %s was %s, which is not a string." variable value))
+	       (when (and pattern (not (string-match pattern value)))
+		 (error "Variable %s was %s does not match pattern %s." variable value pattern)))
+	      ((string-equal type "integer")
+	       (unless (integerp value)
+		 (error "Variable %s was %s, which is not an integer." variable value)))
+	      ((string-equal type "boolean")
+	       (unless (booleanp value)
+		 (error "Variable %s was %s, which is not an boolean." variable value)))
+	      (t nil)))
+      value)))
+
+(defun google--build-query-string (alist include-?-prefix)
+  (let ((string (mapconcat (lambda (k.v)
+			     (let ((k (car k.v))
+				   (v (cdr k.v)))
+			       (format "%s=%s" k (url-hexify-string v))))
+			   (remove-if-not 'cdr alist) "&")))
+    (if include-?-prefix
+	(concat "?" string)
+      string)))
+  
+(defun google--emit-method (methodKey json)
+  (with--google-json-bind (description httpMethod response request path parameters) json
+    (assert (member httpMethod '("POST" "GET" "PUT" "DELETE")))
+    (let* ((name (with--google-json-bind (name version) google--json
+		   (intern (concat "google-" name "-" version ":" (mapconcat 'symbol-name (nreverse (cons methodKey (mapcar 'car google--path))) "/")))))
+	   ;; Okay, so what are the variables I have?
+	   (local-description (format "path %s\nparams %s\nresponse %s\nrequest: %s" path parameters response request))
+	   (doc-string ;(replace-regexp-in-string "\"" "\\\""
+	    (if local-description (concat description "\n\n" local-description) description)); t t))
+	   (all-parameters (append parameters google--parameters))
+	   (expression
+	    `(let ,(mapcar (lambda (parameter)
+			     (let ((name (first parameter)))
+			       (with--google-json-bind (required location type pattern) (cdr parameter)
+				 (assert (member type '("string" "integer" "boolean")) t "Unknown type %s, expected one of %s.")
+				 (assert (member location '("query" "path")) t "Unknown location %s, expected one of %s")
+				 `(,name (google--get-alist ',name alist ,required ,type ,pattern)))))
+			   all-parameters)
+	       (let ((request-url (concat ,@(google--build-url-expression google--url path)
+					  ;; More to go here... url query paramateres which may exist.
+					  ,@(let ((query-alist-expression
+						   (mapcan (lambda (parameter)
+							     (with--google-json-bind (location) (cdr parameter)
+							       (when (string-equal location "query")
+								 (let ((name (first parameter)))
+								   `((cons ,(symbol-name name) ,name))))))
+							   all-parameters)))
+					      (when query-alist-expression
+						`((google--build-query-string (list ,@query-alist-expression) t))))))
+		     (url-request-method ,httpMethod)
+		     (url-request-data ,(when (google--ref-p request)
+				      (with--google-json-bind (name version) google--json
+					 (pushnew (google--ref-target request) google--required-encoders)
+					`(,(google--name-of-structure-json-encoder name version (google--ref-target request)) request-alist))))
+		     (response-parser ,(when (google--ref-p response)
+					 (with--google-json-bind (name version) google--json
+					   (pushnew (google--ref-target response) google--required-decoders)
+					   (list 'quote (google--name-of-structure-json-decoder name version (google--ref-target response)))))))
+		 (if request-handler
+		     (funcall request-handler request-url url-request-method url-request-data response-parser)
+		   (with-current-buffer (url-retrieve-synchronously request-url nil nil google-default-timeout)
+		     (goto-char url-http-end-of-headers)
+		     (prog1 (funcall response-parser)
+		       (kill-buffer))))))))
+      (google--emit-function name doc-string all-parameters (if (google--ref-p request) '(request-handler alist request-alist) '(request-handler alist))
+			     (list expression)))))
+
+;; ** Programmers interface callbacks **
 ;; You should set the method, resource-after, resource-before, discovery-document-aftter and
 ;; discovery-document-before callbacks.  These callbacks can refer to the dynamic variables
 ;; schemas, parameters, url, and path.
 ;;
 ;; Once set, the entry point is google--discovery-document-process, which is usually
 ;; passed to google-discovery-document-call.
-(defvar google--schemas)
-(defvar google--parameters)
-(defvar google--url)
-(defvar google--path)
-(defvar google--method-callback 'no-op) ;; args: methodKey json-sexp
-(defvar google--resource-before-callback 'no-op) ;; args: resourceKey json-sexp
-(defvar google--resource-after-callback 'no-op) ;; args: resourceKey json-sexp
+
+(defvar google--method-callback 'google--emit-method) ;; args: methodKey json-sexp
+(defvar google--resource-before-callback 'google--create-section-for-resource) ;; args: resourceKey json-sexp
+(defvar google--resource-after-callback 'google--close-section-for-resource) ;; args: resourceKey json-sexp
 (defvar google--discovery-document-before-callback 'google--open-and-truncate-file-for-discovery-document) ;; args: json-sexp
-(defvar google--discovery-document-after-callback 'google--save-and-kill-discovery-document-buffer) ;; args: json-sexp
+(defvar google--discovery-document-after-callback 'google--emit-encoders-and-decoders-save-and-kill-discovery-document-buffer) ;; args: json-sexp
 
 (defun google--handle-method (method)
   "Call the appropriate callback."
@@ -217,7 +413,13 @@
       (let ((google--schemas schemas)
 	    (google--parameters parameters)
 	    (google--url (concat rootUrl servicePath))
-	    (google--path (list (cons nil json))))
+	    (google--path nil)
+	    (google--json json)
+	    (google--beginning-of-code-section nil)
+	    (google--required-encoders nil)
+	    (google--required-decoders nil)
+	    (print-level nil)
+	    (print-length nil))
 	(funcall google--discovery-document-before-callback json)
 	(dolist (m methods)
 	  ;; Do something with methods.... but what?
@@ -267,12 +469,25 @@
 			   (remove existing google--discovery-documents)))
 	       (funcall callback status)))))))))
 
+(defvar google-discovery-documents
+  '("https://translation.googleapis.com/$discovery/rest?version=v3"
+    "https://texttospeech.googleapis.com/$discovery/rest?version=v1")
+  "A list of discovery documents to process.")
+
+(defun google--meta-process-all ()
+  "Run through the list of discovery documents generating lisp
+   code for all of them."
+  (map nil (lambda (url)
+	     (message "Process %s" url)
+	     (google--discovery-document-call url 'google--discovery-document-process))
+       google-discovery-documents))
+
 ;; (google--discovery-document-call
 ;;  (first google-discovery-documents)
 ;;  'google--discovery-document-debug)
 
-(google--discovery-document-call
- (first google-discovery-documents)
- 'google--discovery-document-process)
+;; (google--discovery-document-call
+;;  (first google-discovery-documents)
+;;  'google--discovery-document-process)
 
 ;;; google-meta.el ends here
