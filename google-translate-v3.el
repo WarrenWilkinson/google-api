@@ -28,12 +28,13 @@
 
 ;; Integrates text translation into your website or application.
 ;; Usage: https://cloud.google.com/translate/docs/quickstarts
-;; Revision: 20200221
+;; Revision: 20200306
 
 ;;; Code:
 
 ;; Json Decoders
 
+;;;###autoload
 (defun google--translate-v3:structure-decode:DetectLanguageResponse ()
   "The response message for language detection.
   
@@ -43,6 +44,7 @@
       order. The most probable language first."
   (json-read))
 
+;;;###autoload
 (defun google--translate-v3:structure-decode:Empty ()
   "A generic empty message that you can re-use to avoid defining duplicated
   empty messages in your APIs. A typical example is to use it as the request
@@ -57,10 +59,17 @@
   NO PARAMETERS."
   (json-read))
 
+;;;###autoload
 (defun google--translate-v3:structure-decode:Glossary ()
   "Represents a glossary built from user provided data.
   
   Alist Parameters:
+    
+     * languageCodesSet (nil): Used with equivalent term set glossaries.
+    
+     * endTime (string): Output only. When the glossary creation was finished.
+    
+     * entryCount (integer): Output only. The number of entries defined in the glossary.
     
      * inputConfig (nil): Required. Provides examples to build the glossary from.
       Total glossary must not exceed 10M Unicode codepoints.
@@ -70,15 +79,10 @@
      * name (string): Required. The resource name of the glossary. Glossary names have the form
       `projects/{project-number-or-id}/locations/{location-id}/glossaries/{glossary-id}`.
     
-     * languagePair (nil): Used with unidirectional glossaries.
-    
-     * languageCodesSet (nil): Used with equivalent term set glossaries.
-    
-     * endTime (string): Output only. When the glossary creation was finished.
-    
-     * entryCount (integer): Output only. The number of entries defined in the glossary."
+     * languagePair (nil): Used with unidirectional glossaries."
   (json-read))
 
+;;;###autoload
 (defun google--translate-v3:structure-decode:ListGlossariesResponse ()
   "Response message for ListGlossaries.
   
@@ -91,16 +95,18 @@
      * glossaries (array): The list of glossaries for a project."
   (json-read))
 
+;;;###autoload
 (defun google--translate-v3:structure-decode:ListLocationsResponse ()
   "The response message for Locations.ListLocations.
   
   Alist Parameters:
     
-     * locations (array): A list of locations that matches the specified filter in the request.
+     * nextPageToken (string): The standard List next-page token.
     
-     * nextPageToken (string): The standard List next-page token."
+     * locations (array): A list of locations that matches the specified filter in the request."
   (json-read))
 
+;;;###autoload
 (defun google--translate-v3:structure-decode:ListOperationsResponse ()
   "The response message for Operations.ListOperations.
   
@@ -111,17 +117,11 @@
      * nextPageToken (string): The standard List next-page token."
   (json-read))
 
+;;;###autoload
 (defun google--translate-v3:structure-decode:Location ()
   "A resource that represents Google Cloud Platform location.
   
   Alist Parameters:
-    
-     * metadata (object): Service-specific metadata. For example the available capacity at the given
-      location.
-    
-     * labels (object): Cross-service attributes for the location. For example
-      
-          {\"cloud.googleapis.com/region\": \"us-east1\"}
     
      * name (string): Resource name for the location, which may vary between implementations.
       For example: `\"projects/example-project/locations/us-east1\"`
@@ -129,14 +129,31 @@
      * locationId (string): The canonical id for this location. For example: `\"us-east1\"`.
     
      * displayName (string): The friendly name for this location, typically a nearby city name.
-      For example, \"Tokyo\"."
+      For example, \"Tokyo\".
+    
+     * metadata (object): Service-specific metadata. For example the available capacity at the given
+      location.
+    
+     * labels (object): Cross-service attributes for the location. For example
+      
+          {\"cloud.googleapis.com/region\": \"us-east1\"}"
   (json-read))
 
+;;;###autoload
 (defun google--translate-v3:structure-decode:Operation ()
   "This resource represents a long-running operation that is the result of a
   network API call.
   
   Alist Parameters:
+    
+     * metadata (object): Service-specific metadata associated with the operation.  It typically
+      contains progress information and common metadata such as create time.
+      Some services might not provide such metadata.  Any method that returns a
+      long-running operation should document the metadata type, if any.
+    
+     * done (boolean): If the value is `false`, it means the operation is still in progress.
+      If `true`, the operation is completed, and either `error` or `response` is
+      available.
     
      * response (object): The normal response of the operation in case of success.  If the original
       method returns no data on success, such as `Delete`, the response is
@@ -151,18 +168,10 @@
       originally returns it. If you use the default HTTP mapping, the
       `name` should be a resource name ending with `operations/{unique_id}`.
     
-     * error (nil): The error result of the operation in case of failure or cancellation.
-    
-     * metadata (object): Service-specific metadata associated with the operation.  It typically
-      contains progress information and common metadata such as create time.
-      Some services might not provide such metadata.  Any method that returns a
-      long-running operation should document the metadata type, if any.
-    
-     * done (boolean): If the value is `false`, it means the operation is still in progress.
-      If `true`, the operation is completed, and either `error` or `response` is
-      available."
+     * error (nil): The error result of the operation in case of failure or cancellation."
   (json-read))
 
+;;;###autoload
 (defun google--translate-v3:structure-decode:SupportedLanguages ()
   "The response message for discovering supported languages.
   
@@ -172,6 +181,7 @@
       for each language the Translation API supports."
   (json-read))
 
+;;;###autoload
 (defun google--translate-v3:structure-decode:TranslateTextResponse ()
   "
   
@@ -190,16 +200,11 @@
 
 ;; Json Encoders
 
+;;;###autoload
 (defun google--translate-v3:structure-encode:BatchTranslateTextRequest (alist)
   "The batch translation request.
   
   Alist Parameters:
-    
-     * outputConfig (nil): Required. Output configuration.
-      If 2 input configs match to the same file (that is, same input path),
-      we don't generate output for duplicate inputs.
-    
-     * sourceLanguageCode (string): Required. Source language code.
     
      * inputConfigs (array): Required. Input configurations.
       The total number of files matched should be <= 1000.
@@ -236,11 +241,18 @@
       See https://cloud.google.com/translate/docs/advanced/labels for more
       information.
     
-     * targetLanguageCodes (array): Required. Specify up to 10 language codes here."
+     * targetLanguageCodes (array): Required. Specify up to 10 language codes here.
+    
+     * outputConfig (nil): Required. Output configuration.
+      If 2 input configs match to the same file (that is, same input path),
+      we don't generate output for duplicate inputs.
+    
+     * sourceLanguageCode (string): Required. Source language code."
   (encode-coding-string
    (json-encode alist)
    'utf-8))
 
+;;;###autoload
 (defun google--translate-v3:structure-encode:CancelOperationRequest (alist)
   "The request message for Operations.CancelOperation.
   
@@ -249,6 +261,7 @@
    (json-encode alist)
    'utf-8))
 
+;;;###autoload
 (defun google--translate-v3:structure-encode:DetectLanguageRequest (alist)
   "The request message for language detection.
   
@@ -282,10 +295,17 @@
    (json-encode alist)
    'utf-8))
 
+;;;###autoload
 (defun google--translate-v3:structure-encode:Glossary (alist)
   "Represents a glossary built from user provided data.
   
   Alist Parameters:
+    
+     * languageCodesSet (nil): Used with equivalent term set glossaries.
+    
+     * endTime (string): Output only. When the glossary creation was finished.
+    
+     * entryCount (integer): Output only. The number of entries defined in the glossary.
     
      * inputConfig (nil): Required. Provides examples to build the glossary from.
       Total glossary must not exceed 10M Unicode codepoints.
@@ -295,21 +315,29 @@
      * name (string): Required. The resource name of the glossary. Glossary names have the form
       `projects/{project-number-or-id}/locations/{location-id}/glossaries/{glossary-id}`.
     
-     * languagePair (nil): Used with unidirectional glossaries.
-    
-     * languageCodesSet (nil): Used with equivalent term set glossaries.
-    
-     * endTime (string): Output only. When the glossary creation was finished.
-    
-     * entryCount (integer): Output only. The number of entries defined in the glossary."
+     * languagePair (nil): Used with unidirectional glossaries."
   (encode-coding-string
    (json-encode alist)
    'utf-8))
 
+;;;###autoload
 (defun google--translate-v3:structure-encode:TranslateTextRequest (alist)
   "The request message for synchronous translation.
   
   Alist Parameters:
+    
+     * labels (object): Optional. The labels with user-defined metadata for the request.
+      
+      Label keys and values can be no longer than 63 characters
+      (Unicode codepoints), can only contain lowercase letters, numeric
+      characters, underscores and dashes. International characters are allowed.
+      Label values are optional. Label keys must start with a letter.
+      
+      See https://cloud.google.com/translate/docs/advanced/labels for more
+      information.
+    
+     * targetLanguageCode (string): Required. The BCP-47 language code to use for translation of the input
+      text, set to one of the language codes listed in Language Support.
     
      * sourceLanguageCode (string): Optional. The BCP-47 language code of the input text if
       known, for example, \"en-US\" or \"sr-Latn\". Supported language codes are
@@ -344,24 +372,12 @@
     
      * glossaryConfig (nil): Optional. Glossary to be applied. The glossary must be
       within the same region (have the same location-id) as the model, otherwise
-      an INVALID_ARGUMENT (400) error is returned.
-    
-     * labels (object): Optional. The labels with user-defined metadata for the request.
-      
-      Label keys and values can be no longer than 63 characters
-      (Unicode codepoints), can only contain lowercase letters, numeric
-      characters, underscores and dashes. International characters are allowed.
-      Label values are optional. Label keys must start with a letter.
-      
-      See https://cloud.google.com/translate/docs/advanced/labels for more
-      information.
-    
-     * targetLanguageCode (string): Required. The BCP-47 language code to use for translation of the input
-      text, set to one of the language codes listed in Language Support."
+      an INVALID_ARGUMENT (400) error is returned."
   (encode-coding-string
    (json-encode alist)
    'utf-8))
 
+;;;###autoload
 (defun google--translate-v3:structure-encode:WaitOperationRequest (alist)
   "The request message for Operations.WaitOperation.
   
@@ -377,6 +393,278 @@
 
 ;; Resource projects:
 
+;;;###autoload
+(defun google-translate-v3:projects/translateText (request-handler alist request-alist)
+  "Translates input text and returns translated text.
+  
+  path v3/{+parent}:translateText
+  params ((parent (description . Required. Project or location to make a call. Must refer to a caller's
+  project.
+  
+  Format: `projects/{project-number-or-id}` or
+  `projects/{project-number-or-id}/locations/{location-id}`.
+  
+  For global calls, use `projects/{project-number-or-id}/locations/global` or
+  `projects/{project-number-or-id}`.
+  
+  Non-global location is required for requests using AutoML models or
+  custom glossaries.
+  
+  Models and glossaries must be within the same region (have same
+  location-id), otherwise an INVALID_ARGUMENT (400) error is returned.) (required . t) (type . string) (pattern . ^projects/[^/]+$) (location . path)))
+  response (($ref . TranslateTextResponse))
+  request: (($ref . TranslateTextRequest))
+  
+  Alist Parameters:
+    
+     * $.xgafv (string): V1 error format.
+    
+     * access_token (string): OAuth access token.
+    
+     * alt (string): Data format for response.
+    
+     * callback (string): JSONP
+    
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * oauth_token (string): OAuth 2.0 token for the current user.
+    
+     * parent (string): Required. Project or location to make a call. Must refer to a caller's
+      project.
+      
+      Format: `projects/{project-number-or-id}` or
+      `projects/{project-number-or-id}/locations/{location-id}`.
+      
+      For global calls, use `projects/{project-number-or-id}/locations/global` or
+      `projects/{project-number-or-id}`.
+      
+      Non-global location is required for requests using AutoML models or
+      custom glossaries.
+      
+      Models and glossaries must be within the same region (have same
+      location-id), otherwise an INVALID_ARGUMENT (400) error is returned.
+    
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
+  (let
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
+       (access_token
+        (google--get-alist 'access_token alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
+       (callback
+        (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (oauth_token
+        (google--get-alist 'oauth_token alist nil "string" nil))
+       (parent
+        (google--get-alist 'parent alist t "string" "^projects/[^/]+$"))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
+    (let
+        ((request-url
+  	(concat "https://translation.googleapis.com/v3/"
+  		(rfc6570-expand-reserved parent)
+  		":translateText"
+  		(google--build-query-string
+  		 (list
+  		  (cons "$.xgafv" $\.xgafv)
+  		  (cons "access_token" access_token)
+  		  (cons "alt" alt)
+  		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
+  		  (cons "oauth_token" oauth_token)
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
+  		 t)))
+         (url-request-method "POST")
+         (url-request-data
+  	(google--translate-v3:structure-encode:TranslateTextRequest request-alist))
+         (response-parser 'google--translate-v3:structure-decode:TranslateTextResponse))
+      (if request-handler
+  	(funcall request-handler request-url url-request-method url-request-data response-parser)
+        (with-current-buffer
+  	  (url-retrieve-synchronously request-url nil nil google-default-timeout)
+  	(goto-char url-http-end-of-headers)
+  	(prog1
+  	    (funcall response-parser)
+  	  (kill-buffer)))))))
+
+;;;###autoload
+(defun google-translate-v3:projects/getSupportedLanguages (request-handler alist)
+  "Returns a list of supported languages for translation.
+  
+  path v3/{+parent}/supportedLanguages
+  params ((displayLanguageCode (location . query) (description . Optional. The language to use to return localized, human readable names
+  of supported languages. If missing, then display names are not returned
+  in a response.) (type . string)) (model (type . string) (location . query) (description . Optional. Get supported languages of this model.
+  
+  The format depends on model type:
+  
+  - AutoML Translation models:
+    `projects/{project-number-or-id}/locations/{location-id}/models/{model-id}`
+  
+  - General (built-in) models:
+    `projects/{project-number-or-id}/locations/{location-id}/models/general/nmt`,
+    `projects/{project-number-or-id}/locations/{location-id}/models/general/base`
+  
+  
+  Returns languages supported by the specified model.
+  If missing, we get supported languages of Google general base (PBMT) model.)) (parent (description . Required. Project or location to make a call. Must refer to a caller's
+  project.
+  
+  Format: `projects/{project-number-or-id}` or
+  `projects/{project-number-or-id}/locations/{location-id}`.
+  
+  For global calls, use `projects/{project-number-or-id}/locations/global` or
+  `projects/{project-number-or-id}`.
+  
+  Non-global location is required for AutoML models.
+  
+  Only models within the same region (have same location-id) can be used,
+  otherwise an INVALID_ARGUMENT (400) error is returned.) (required . t) (type . string) (pattern . ^projects/[^/]+$) (location . path)))
+  response (($ref . SupportedLanguages))
+  request: nil
+  
+  Alist Parameters:
+    
+     * $.xgafv (string): V1 error format.
+    
+     * access_token (string): OAuth access token.
+    
+     * alt (string): Data format for response.
+    
+     * callback (string): JSONP
+    
+     * displayLanguageCode (string): Optional. The language to use to return localized, human readable names
+      of supported languages. If missing, then display names are not returned
+      in a response.
+    
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * model (string): Optional. Get supported languages of this model.
+      
+      The format depends on model type:
+      
+      - AutoML Translation models:
+        `projects/{project-number-or-id}/locations/{location-id}/models/{model-id}`
+      
+      - General (built-in) models:
+        `projects/{project-number-or-id}/locations/{location-id}/models/general/nmt`,
+        `projects/{project-number-or-id}/locations/{location-id}/models/general/base`
+      
+      
+      Returns languages supported by the specified model.
+      If missing, we get supported languages of Google general base (PBMT) model.
+    
+     * oauth_token (string): OAuth 2.0 token for the current user.
+    
+     * parent (string): Required. Project or location to make a call. Must refer to a caller's
+      project.
+      
+      Format: `projects/{project-number-or-id}` or
+      `projects/{project-number-or-id}/locations/{location-id}`.
+      
+      For global calls, use `projects/{project-number-or-id}/locations/global` or
+      `projects/{project-number-or-id}`.
+      
+      Non-global location is required for AutoML models.
+      
+      Only models within the same region (have same location-id) can be used,
+      otherwise an INVALID_ARGUMENT (400) error is returned.
+    
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
+  (let
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
+       (access_token
+        (google--get-alist 'access_token alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
+       (callback
+        (google--get-alist 'callback alist nil "string" nil))
+       (displayLanguageCode
+        (google--get-alist 'displayLanguageCode alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (model
+        (google--get-alist 'model alist nil "string" nil))
+       (oauth_token
+        (google--get-alist 'oauth_token alist nil "string" nil))
+       (parent
+        (google--get-alist 'parent alist t "string" "^projects/[^/]+$"))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
+    (let
+        ((request-url
+  	(concat "https://translation.googleapis.com/v3/"
+  		(rfc6570-expand-reserved parent)
+  		"/supportedLanguages"
+  		(google--build-query-string
+  		 (list
+  		  (cons "$.xgafv" $\.xgafv)
+  		  (cons "access_token" access_token)
+  		  (cons "alt" alt)
+  		  (cons "callback" callback)
+  		  (cons "displayLanguageCode" displayLanguageCode)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
+  		  (cons "model" model)
+  		  (cons "oauth_token" oauth_token)
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
+  		 t)))
+         (url-request-method "GET")
+         (url-request-data nil)
+         (response-parser 'google--translate-v3:structure-decode:SupportedLanguages))
+      (if request-handler
+  	(funcall request-handler request-url url-request-method url-request-data response-parser)
+        (with-current-buffer
+  	  (url-retrieve-synchronously request-url nil nil google-default-timeout)
+  	(goto-char url-http-end-of-headers)
+  	(prog1
+  	    (funcall response-parser)
+  	  (kill-buffer)))))))
+
+;;;###autoload
 (defun google-translate-v3:projects/detectLanguage (request-handler alist request-alist)
   "Detects the language of text within a request.
   
@@ -397,6 +685,20 @@
   
   Alist Parameters:
     
+     * $.xgafv (string): V1 error format.
+    
+     * access_token (string): OAuth access token.
+    
+     * alt (string): Data format for response.
+    
+     * callback (string): JSONP
+    
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * oauth_token (string): OAuth 2.0 token for the current user.
+    
      * parent (string): Required. Project or location to make a call. Must refer to a caller's
       project.
       
@@ -409,52 +711,38 @@
       Only models within the same region (has same location-id) can be used.
       Otherwise an INVALID_ARGUMENT (400) error is returned.
     
-     * alt (string): Data format for response.
-    
-     * access_token (string): OAuth access token.
-    
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
     
      * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
     
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
      * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
     
-     * callback (string): JSONP
-    
-     * oauth_token (string): OAuth 2.0 token for the current user.
-    
-     * $.xgafv (string): V1 error format."
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
   (let
-      ((parent
-        (google--get-alist 'parent alist t "string" "^projects/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
        (access_token
         (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
        (callback
         (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
        (oauth_token
         (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
+       (parent
+        (google--get-alist 'parent alist t "string" "^projects/[^/]+$"))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
     (let
         ((request-url
   	(concat "https://translation.googleapis.com/v3/"
@@ -462,17 +750,17 @@
   		":detectLanguage"
   		(google--build-query-string
   		 (list
-  		  (cons "alt" alt)
+  		  (cons "$.xgafv" $\.xgafv)
   		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
+  		  (cons "alt" alt)
   		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
   		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
   		 t)))
          (url-request-method "POST")
          (url-request-data
@@ -487,547 +775,79 @@
   	    (funcall response-parser)
   	  (kill-buffer)))))))
 
-(defun google-translate-v3:projects/translateText (request-handler alist request-alist)
-  "Translates input text and returns translated text.
-  
-  path v3/{+parent}:translateText
-  params ((parent (location . path) (description . Required. Project or location to make a call. Must refer to a caller's
-  project.
-  
-  Format: `projects/{project-number-or-id}` or
-  `projects/{project-number-or-id}/locations/{location-id}`.
-  
-  For global calls, use `projects/{project-number-or-id}/locations/global` or
-  `projects/{project-number-or-id}`.
-  
-  Non-global location is required for requests using AutoML models or
-  custom glossaries.
-  
-  Models and glossaries must be within the same region (have same
-  location-id), otherwise an INVALID_ARGUMENT (400) error is returned.) (required . t) (type . string) (pattern . ^projects/[^/]+$)))
-  response (($ref . TranslateTextResponse))
-  request: (($ref . TranslateTextRequest))
-  
-  Alist Parameters:
-    
-     * parent (string): Required. Project or location to make a call. Must refer to a caller's
-      project.
-      
-      Format: `projects/{project-number-or-id}` or
-      `projects/{project-number-or-id}/locations/{location-id}`.
-      
-      For global calls, use `projects/{project-number-or-id}/locations/global` or
-      `projects/{project-number-or-id}`.
-      
-      Non-global location is required for requests using AutoML models or
-      custom glossaries.
-      
-      Models and glossaries must be within the same region (have same
-      location-id), otherwise an INVALID_ARGUMENT (400) error is returned.
-    
-     * alt (string): Data format for response.
-    
-     * access_token (string): OAuth access token.
-    
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
-    
-     * callback (string): JSONP
-    
-     * oauth_token (string): OAuth 2.0 token for the current user.
-    
-     * $.xgafv (string): V1 error format."
-  (let
-      ((parent
-        (google--get-alist 'parent alist t "string" "^projects/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
-       (access_token
-        (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
-       (callback
-        (google--get-alist 'callback alist nil "string" nil))
-       (oauth_token
-        (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
-    (let
-        ((request-url
-  	(concat "https://translation.googleapis.com/v3/"
-  		(rfc6570-expand-reserved parent)
-  		":translateText"
-  		(google--build-query-string
-  		 (list
-  		  (cons "alt" alt)
-  		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
-  		  (cons "callback" callback)
-  		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
-  		 t)))
-         (url-request-method "POST")
-         (url-request-data
-  	(google--translate-v3:structure-encode:TranslateTextRequest request-alist))
-         (response-parser 'google--translate-v3:structure-decode:TranslateTextResponse))
-      (if request-handler
-  	(funcall request-handler request-url url-request-method url-request-data response-parser)
-        (with-current-buffer
-  	  (url-retrieve-synchronously request-url nil nil google-default-timeout)
-  	(goto-char url-http-end-of-headers)
-  	(prog1
-  	    (funcall response-parser)
-  	  (kill-buffer)))))))
-
-(defun google-translate-v3:projects/getSupportedLanguages (request-handler alist)
-  "Returns a list of supported languages for translation.
-  
-  path v3/{+parent}/supportedLanguages
-  params ((model (type . string) (location . query) (description . Optional. Get supported languages of this model.
-  
-  The format depends on model type:
-  
-  - AutoML Translation models:
-    `projects/{project-number-or-id}/locations/{location-id}/models/{model-id}`
-  
-  - General (built-in) models:
-    `projects/{project-number-or-id}/locations/{location-id}/models/general/nmt`,
-    `projects/{project-number-or-id}/locations/{location-id}/models/general/base`
-  
-  
-  Returns languages supported by the specified model.
-  If missing, we get supported languages of Google general base (PBMT) model.)) (parent (location . path) (description . Required. Project or location to make a call. Must refer to a caller's
-  project.
-  
-  Format: `projects/{project-number-or-id}` or
-  `projects/{project-number-or-id}/locations/{location-id}`.
-  
-  For global calls, use `projects/{project-number-or-id}/locations/global` or
-  `projects/{project-number-or-id}`.
-  
-  Non-global location is required for AutoML models.
-  
-  Only models within the same region (have same location-id) can be used,
-  otherwise an INVALID_ARGUMENT (400) error is returned.) (required . t) (type . string) (pattern . ^projects/[^/]+$)) (displayLanguageCode (type . string) (location . query) (description . Optional. The language to use to return localized, human readable names
-  of supported languages. If missing, then display names are not returned
-  in a response.)))
-  response (($ref . SupportedLanguages))
-  request: nil
-  
-  Alist Parameters:
-    
-     * model (string): Optional. Get supported languages of this model.
-      
-      The format depends on model type:
-      
-      - AutoML Translation models:
-        `projects/{project-number-or-id}/locations/{location-id}/models/{model-id}`
-      
-      - General (built-in) models:
-        `projects/{project-number-or-id}/locations/{location-id}/models/general/nmt`,
-        `projects/{project-number-or-id}/locations/{location-id}/models/general/base`
-      
-      
-      Returns languages supported by the specified model.
-      If missing, we get supported languages of Google general base (PBMT) model.
-    
-     * parent (string): Required. Project or location to make a call. Must refer to a caller's
-      project.
-      
-      Format: `projects/{project-number-or-id}` or
-      `projects/{project-number-or-id}/locations/{location-id}`.
-      
-      For global calls, use `projects/{project-number-or-id}/locations/global` or
-      `projects/{project-number-or-id}`.
-      
-      Non-global location is required for AutoML models.
-      
-      Only models within the same region (have same location-id) can be used,
-      otherwise an INVALID_ARGUMENT (400) error is returned.
-    
-     * displayLanguageCode (string): Optional. The language to use to return localized, human readable names
-      of supported languages. If missing, then display names are not returned
-      in a response.
-    
-     * alt (string): Data format for response.
-    
-     * access_token (string): OAuth access token.
-    
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
-    
-     * callback (string): JSONP
-    
-     * oauth_token (string): OAuth 2.0 token for the current user.
-    
-     * $.xgafv (string): V1 error format."
-  (let
-      ((model
-        (google--get-alist 'model alist nil "string" nil))
-       (parent
-        (google--get-alist 'parent alist t "string" "^projects/[^/]+$"))
-       (displayLanguageCode
-        (google--get-alist 'displayLanguageCode alist nil "string" nil))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
-       (access_token
-        (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
-       (callback
-        (google--get-alist 'callback alist nil "string" nil))
-       (oauth_token
-        (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
-    (let
-        ((request-url
-  	(concat "https://translation.googleapis.com/v3/"
-  		(rfc6570-expand-reserved parent)
-  		"/supportedLanguages"
-  		(google--build-query-string
-  		 (list
-  		  (cons "model" model)
-  		  (cons "displayLanguageCode" displayLanguageCode)
-  		  (cons "alt" alt)
-  		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
-  		  (cons "callback" callback)
-  		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
-  		 t)))
-         (url-request-method "GET")
-         (url-request-data nil)
-         (response-parser 'google--translate-v3:structure-decode:SupportedLanguages))
-      (if request-handler
-  	(funcall request-handler request-url url-request-method url-request-data response-parser)
-        (with-current-buffer
-  	  (url-retrieve-synchronously request-url nil nil google-default-timeout)
-  	(goto-char url-http-end-of-headers)
-  	(prog1
-  	    (funcall response-parser)
-  	  (kill-buffer)))))))
-
 ;; Resource projects.locations:
 
-(defun google-translate-v3:projects/locations/get (request-handler alist)
-  "Gets information about a location.
-  
-  path v3/{+name}
-  params ((name (description . Resource name for the location.) (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$) (location . path)))
-  response (($ref . Location))
-  request: nil
-  
-  Alist Parameters:
-    
-     * name (string): Resource name for the location.
-    
-     * alt (string): Data format for response.
-    
-     * access_token (string): OAuth access token.
-    
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
-    
-     * callback (string): JSONP
-    
-     * oauth_token (string): OAuth 2.0 token for the current user.
-    
-     * $.xgafv (string): V1 error format."
-  (let
-      ((name
-        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
-       (access_token
-        (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
-       (callback
-        (google--get-alist 'callback alist nil "string" nil))
-       (oauth_token
-        (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
-    (let
-        ((request-url
-  	(concat "https://translation.googleapis.com/v3/"
-  		(rfc6570-expand-reserved name)
-  		(google--build-query-string
-  		 (list
-  		  (cons "alt" alt)
-  		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
-  		  (cons "callback" callback)
-  		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
-  		 t)))
-         (url-request-method "GET")
-         (url-request-data nil)
-         (response-parser 'google--translate-v3:structure-decode:Location))
-      (if request-handler
-  	(funcall request-handler request-url url-request-method url-request-data response-parser)
-        (with-current-buffer
-  	  (url-retrieve-synchronously request-url nil nil google-default-timeout)
-  	(goto-char url-http-end-of-headers)
-  	(prog1
-  	    (funcall response-parser)
-  	  (kill-buffer)))))))
-
-(defun google-translate-v3:projects/locations/batchTranslateText (request-handler alist request-alist)
-  "Translates a large volume of text in asynchronous batch mode.
-  This function provides real-time output as the inputs are being processed.
-  If caller cancels a request, the partial results (for an input file, it's
-  all or nothing) may still be available on the specified output location.
-  
-  This call returns immediately and you can
-  use google.longrunning.Operation.name to poll the status of the call.
-  
-  path v3/{+parent}:batchTranslateText
-  params ((parent (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$) (location . path) (description . Required. Location to make a call. Must refer to a caller's project.
-  
-  Format: `projects/{project-number-or-id}/locations/{location-id}`.
-  
-  The `global` location is not supported for batch translation.
-  
-  Only AutoML Translation models or glossaries within the same region (have
-  the same location-id) can be used, otherwise an INVALID_ARGUMENT (400)
-  error is returned.)))
-  response (($ref . Operation))
-  request: (($ref . BatchTranslateTextRequest))
-  
-  Alist Parameters:
-    
-     * parent (string): Required. Location to make a call. Must refer to a caller's project.
-      
-      Format: `projects/{project-number-or-id}/locations/{location-id}`.
-      
-      The `global` location is not supported for batch translation.
-      
-      Only AutoML Translation models or glossaries within the same region (have
-      the same location-id) can be used, otherwise an INVALID_ARGUMENT (400)
-      error is returned.
-    
-     * alt (string): Data format for response.
-    
-     * access_token (string): OAuth access token.
-    
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
-    
-     * callback (string): JSONP
-    
-     * oauth_token (string): OAuth 2.0 token for the current user.
-    
-     * $.xgafv (string): V1 error format."
-  (let
-      ((parent
-        (google--get-alist 'parent alist t "string" "^projects/[^/]+/locations/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
-       (access_token
-        (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
-       (callback
-        (google--get-alist 'callback alist nil "string" nil))
-       (oauth_token
-        (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
-    (let
-        ((request-url
-  	(concat "https://translation.googleapis.com/v3/"
-  		(rfc6570-expand-reserved parent)
-  		":batchTranslateText"
-  		(google--build-query-string
-  		 (list
-  		  (cons "alt" alt)
-  		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
-  		  (cons "callback" callback)
-  		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
-  		 t)))
-         (url-request-method "POST")
-         (url-request-data
-  	(google--translate-v3:structure-encode:BatchTranslateTextRequest request-alist))
-         (response-parser 'google--translate-v3:structure-decode:Operation))
-      (if request-handler
-  	(funcall request-handler request-url url-request-method url-request-data response-parser)
-        (with-current-buffer
-  	  (url-retrieve-synchronously request-url nil nil google-default-timeout)
-  	(goto-char url-http-end-of-headers)
-  	(prog1
-  	    (funcall response-parser)
-  	  (kill-buffer)))))))
-
+;;;###autoload
 (defun google-translate-v3:projects/locations/list (request-handler alist)
   "Lists information about the supported locations for this service.
   
   path v3/{+name}/locations
-  params ((filter (description . The standard list filter.) (type . string) (location . query)) (name (location . path) (description . The resource that owns the locations collection, if applicable.) (required . t) (type . string) (pattern . ^projects/[^/]+$)) (pageToken (description . The standard list page token.) (type . string) (location . query)) (pageSize (description . The standard list page size.) (format . int32) (type . integer) (location . query)))
+  params ((name (required . t) (type . string) (pattern . ^projects/[^/]+$) (location . path) (description . The resource that owns the locations collection, if applicable.)) (pageToken (type . string) (location . query) (description . The standard list page token.)) (pageSize (description . The standard list page size.) (format . int32) (type . integer) (location . query)) (filter (type . string) (location . query) (description . The standard list filter.)))
   response (($ref . ListLocationsResponse))
   request: nil
   
   Alist Parameters:
     
-     * filter (string): The standard list filter.
-    
-     * name (string): The resource that owns the locations collection, if applicable.
-    
-     * pageToken (string): The standard list page token.
-    
-     * pageSize (integer): The standard list page size.
-    
-     * alt (string): Data format for response.
+     * $.xgafv (string): V1 error format.
     
      * access_token (string): OAuth access token.
     
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+     * alt (string): Data format for response.
     
      * callback (string): JSONP
     
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * filter (string): The standard list filter.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * name (string): The resource that owns the locations collection, if applicable.
+    
      * oauth_token (string): OAuth 2.0 token for the current user.
     
-     * $.xgafv (string): V1 error format."
+     * pageSize (integer): The standard list page size.
+    
+     * pageToken (string): The standard list page token.
+    
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
   (let
-      ((filter
-        (google--get-alist 'filter alist nil "string" nil))
-       (name
-        (google--get-alist 'name alist t "string" "^projects/[^/]+$"))
-       (pageToken
-        (google--get-alist 'pageToken alist nil "string" nil))
-       (pageSize
-        (google--get-alist 'pageSize alist nil "integer" nil))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
        (access_token
         (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
        (callback
         (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (filter
+        (google--get-alist 'filter alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (name
+        (google--get-alist 'name alist t "string" "^projects/[^/]+$"))
        (oauth_token
         (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
+       (pageSize
+        (google--get-alist 'pageSize alist nil "integer" nil))
+       (pageToken
+        (google--get-alist 'pageToken alist nil "string" nil))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
     (let
         ((request-url
   	(concat "https://translation.googleapis.com/v3/"
@@ -1035,20 +855,20 @@
   		"/locations"
   		(google--build-query-string
   		 (list
-  		  (cons "filter" filter)
-  		  (cons "pageToken" pageToken)
-  		  (cons "pageSize" pageSize)
-  		  (cons "alt" alt)
+  		  (cons "$.xgafv" $\.xgafv)
   		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
+  		  (cons "alt" alt)
   		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "filter" filter)
+  		  (cons "key" key)
   		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
+  		  (cons "pageSize" pageSize)
+  		  (cons "pageToken" pageToken)
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
   		 t)))
          (url-request-method "GET")
          (url-request-data nil)
@@ -1062,6 +882,7 @@
   	    (funcall response-parser)
   	  (kill-buffer)))))))
 
+;;;###autoload
 (defun google-translate-v3:projects/locations/translateText (request-handler alist request-alist)
   "Translates input text and returns translated text.
   
@@ -1085,6 +906,20 @@
   
   Alist Parameters:
     
+     * $.xgafv (string): V1 error format.
+    
+     * access_token (string): OAuth access token.
+    
+     * alt (string): Data format for response.
+    
+     * callback (string): JSONP
+    
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * oauth_token (string): OAuth 2.0 token for the current user.
+    
      * parent (string): Required. Project or location to make a call. Must refer to a caller's
       project.
       
@@ -1100,52 +935,38 @@
       Models and glossaries must be within the same region (have same
       location-id), otherwise an INVALID_ARGUMENT (400) error is returned.
     
-     * alt (string): Data format for response.
-    
-     * access_token (string): OAuth access token.
-    
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
     
      * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
     
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
      * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
     
-     * callback (string): JSONP
-    
-     * oauth_token (string): OAuth 2.0 token for the current user.
-    
-     * $.xgafv (string): V1 error format."
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
   (let
-      ((parent
-        (google--get-alist 'parent alist t "string" "^projects/[^/]+/locations/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
        (access_token
         (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
        (callback
         (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
        (oauth_token
         (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
+       (parent
+        (google--get-alist 'parent alist t "string" "^projects/[^/]+/locations/[^/]+$"))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
     (let
         ((request-url
   	(concat "https://translation.googleapis.com/v3/"
@@ -1153,17 +974,17 @@
   		":translateText"
   		(google--build-query-string
   		 (list
-  		  (cons "alt" alt)
+  		  (cons "$.xgafv" $\.xgafv)
   		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
+  		  (cons "alt" alt)
   		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
   		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
   		 t)))
          (url-request-method "POST")
          (url-request-data
@@ -1178,13 +999,12 @@
   	    (funcall response-parser)
   	  (kill-buffer)))))))
 
+;;;###autoload
 (defun google-translate-v3:projects/locations/getSupportedLanguages (request-handler alist)
   "Returns a list of supported languages for translation.
   
   path v3/{+parent}/supportedLanguages
-  params ((displayLanguageCode (description . Optional. The language to use to return localized, human readable names
-  of supported languages. If missing, then display names are not returned
-  in a response.) (type . string) (location . query)) (model (description . Optional. Get supported languages of this model.
+  params ((model (location . query) (description . Optional. Get supported languages of this model.
   
   The format depends on model type:
   
@@ -1197,7 +1017,7 @@
   
   
   Returns languages supported by the specified model.
-  If missing, we get supported languages of Google general base (PBMT) model.) (type . string) (location . query)) (parent (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$) (location . path) (description . Required. Project or location to make a call. Must refer to a caller's
+  If missing, we get supported languages of Google general base (PBMT) model.) (type . string)) (parent (description . Required. Project or location to make a call. Must refer to a caller's
   project.
   
   Format: `projects/{project-number-or-id}` or
@@ -1209,15 +1029,29 @@
   Non-global location is required for AutoML models.
   
   Only models within the same region (have same location-id) can be used,
-  otherwise an INVALID_ARGUMENT (400) error is returned.)))
+  otherwise an INVALID_ARGUMENT (400) error is returned.) (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$) (location . path)) (displayLanguageCode (description . Optional. The language to use to return localized, human readable names
+  of supported languages. If missing, then display names are not returned
+  in a response.) (type . string) (location . query)))
   response (($ref . SupportedLanguages))
   request: nil
   
   Alist Parameters:
     
+     * $.xgafv (string): V1 error format.
+    
+     * access_token (string): OAuth access token.
+    
+     * alt (string): Data format for response.
+    
+     * callback (string): JSONP
+    
      * displayLanguageCode (string): Optional. The language to use to return localized, human readable names
       of supported languages. If missing, then display names are not returned
       in a response.
+    
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
     
      * model (string): Optional. Get supported languages of this model.
       
@@ -1234,6 +1068,8 @@
       Returns languages supported by the specified model.
       If missing, we get supported languages of Google general base (PBMT) model.
     
+     * oauth_token (string): OAuth 2.0 token for the current user.
+    
      * parent (string): Required. Project or location to make a call. Must refer to a caller's
       project.
       
@@ -1248,56 +1084,42 @@
       Only models within the same region (have same location-id) can be used,
       otherwise an INVALID_ARGUMENT (400) error is returned.
     
-     * alt (string): Data format for response.
-    
-     * access_token (string): OAuth access token.
-    
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
     
      * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
     
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
      * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
     
-     * callback (string): JSONP
-    
-     * oauth_token (string): OAuth 2.0 token for the current user.
-    
-     * $.xgafv (string): V1 error format."
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
   (let
-      ((displayLanguageCode
-        (google--get-alist 'displayLanguageCode alist nil "string" nil))
-       (model
-        (google--get-alist 'model alist nil "string" nil))
-       (parent
-        (google--get-alist 'parent alist t "string" "^projects/[^/]+/locations/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
        (access_token
         (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
        (callback
         (google--get-alist 'callback alist nil "string" nil))
+       (displayLanguageCode
+        (google--get-alist 'displayLanguageCode alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (model
+        (google--get-alist 'model alist nil "string" nil))
        (oauth_token
         (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
+       (parent
+        (google--get-alist 'parent alist t "string" "^projects/[^/]+/locations/[^/]+$"))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
     (let
         ((request-url
   	(concat "https://translation.googleapis.com/v3/"
@@ -1305,19 +1127,19 @@
   		"/supportedLanguages"
   		(google--build-query-string
   		 (list
-  		  (cons "displayLanguageCode" displayLanguageCode)
-  		  (cons "model" model)
-  		  (cons "alt" alt)
+  		  (cons "$.xgafv" $\.xgafv)
   		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
+  		  (cons "alt" alt)
   		  (cons "callback" callback)
+  		  (cons "displayLanguageCode" displayLanguageCode)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
+  		  (cons "model" model)
   		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
   		 t)))
          (url-request-method "GET")
          (url-request-data nil)
@@ -1331,11 +1153,12 @@
   	    (funcall response-parser)
   	  (kill-buffer)))))))
 
+;;;###autoload
 (defun google-translate-v3:projects/locations/detectLanguage (request-handler alist request-alist)
   "Detects the language of text within a request.
   
   path v3/{+parent}:detectLanguage
-  params ((parent (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$) (location . path) (description . Required. Project or location to make a call. Must refer to a caller's
+  params ((parent (description . Required. Project or location to make a call. Must refer to a caller's
   project.
   
   Format: `projects/{project-number-or-id}/locations/{location-id}` or
@@ -1345,11 +1168,25 @@
   `projects/{project-number-or-id}`.
   
   Only models within the same region (has same location-id) can be used.
-  Otherwise an INVALID_ARGUMENT (400) error is returned.)))
+  Otherwise an INVALID_ARGUMENT (400) error is returned.) (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$) (location . path)))
   response (($ref . DetectLanguageResponse))
   request: (($ref . DetectLanguageRequest))
   
   Alist Parameters:
+    
+     * $.xgafv (string): V1 error format.
+    
+     * access_token (string): OAuth access token.
+    
+     * alt (string): Data format for response.
+    
+     * callback (string): JSONP
+    
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * oauth_token (string): OAuth 2.0 token for the current user.
     
      * parent (string): Required. Project or location to make a call. Must refer to a caller's
       project.
@@ -1363,52 +1200,38 @@
       Only models within the same region (has same location-id) can be used.
       Otherwise an INVALID_ARGUMENT (400) error is returned.
     
-     * alt (string): Data format for response.
-    
-     * access_token (string): OAuth access token.
-    
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
     
      * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
     
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
      * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
     
-     * callback (string): JSONP
-    
-     * oauth_token (string): OAuth 2.0 token for the current user.
-    
-     * $.xgafv (string): V1 error format."
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
   (let
-      ((parent
-        (google--get-alist 'parent alist t "string" "^projects/[^/]+/locations/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
        (access_token
         (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
        (callback
         (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
        (oauth_token
         (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
+       (parent
+        (google--get-alist 'parent alist t "string" "^projects/[^/]+/locations/[^/]+$"))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
     (let
         ((request-url
   	(concat "https://translation.googleapis.com/v3/"
@@ -1416,17 +1239,17 @@
   		":detectLanguage"
   		(google--build-query-string
   		 (list
-  		  (cons "alt" alt)
+  		  (cons "$.xgafv" $\.xgafv)
   		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
+  		  (cons "alt" alt)
   		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
   		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
   		 t)))
          (url-request-method "POST")
          (url-request-data
@@ -1441,206 +1264,86 @@
   	    (funcall response-parser)
   	  (kill-buffer)))))))
 
-;; Resource projects.locations.glossaries:
-
-(defun google-translate-v3:projects/locations/glossaries/delete (request-handler alist)
-  "Deletes a glossary, or cancels glossary construction
-  if the glossary isn't created yet.
-  Returns NOT_FOUND, if the glossary doesn't exist.
+;;;###autoload
+(defun google-translate-v3:projects/locations/get (request-handler alist)
+  "Gets information about a location.
   
   path v3/{+name}
-  params ((name (description . Required. The name of the glossary to delete.) (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+/glossaries/[^/]+$) (location . path)))
-  response (($ref . Operation))
+  params ((name (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$) (location . path) (description . Resource name for the location.)))
+  response (($ref . Location))
   request: nil
   
   Alist Parameters:
     
-     * name (string): Required. The name of the glossary to delete.
-    
-     * alt (string): Data format for response.
+     * $.xgafv (string): V1 error format.
     
      * access_token (string): OAuth access token.
     
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+     * alt (string): Data format for response.
     
      * callback (string): JSONP
     
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * name (string): Resource name for the location.
+    
      * oauth_token (string): OAuth 2.0 token for the current user.
     
-     * $.xgafv (string): V1 error format."
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
   (let
-      ((name
-        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+/glossaries/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
        (access_token
         (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
        (callback
         (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (name
+        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+$"))
        (oauth_token
         (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
     (let
         ((request-url
   	(concat "https://translation.googleapis.com/v3/"
   		(rfc6570-expand-reserved name)
   		(google--build-query-string
   		 (list
-  		  (cons "alt" alt)
+  		  (cons "$.xgafv" $\.xgafv)
   		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
-  		  (cons "callback" callback)
-  		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
-  		 t)))
-         (url-request-method "DELETE")
-         (url-request-data nil)
-         (response-parser 'google--translate-v3:structure-decode:Operation))
-      (if request-handler
-  	(funcall request-handler request-url url-request-method url-request-data response-parser)
-        (with-current-buffer
-  	  (url-retrieve-synchronously request-url nil nil google-default-timeout)
-  	(goto-char url-http-end-of-headers)
-  	(prog1
-  	    (funcall response-parser)
-  	  (kill-buffer)))))))
-
-(defun google-translate-v3:projects/locations/glossaries/list (request-handler alist)
-  "Lists glossaries in a project. Returns NOT_FOUND, if the project doesn't
-  exist.
-  
-  path v3/{+parent}/glossaries
-  params ((parent (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$) (location . path) (description . Required. The name of the project from which to list all of the glossaries.)) (filter (location . query) (description . Optional. Filter specifying constraints of a list operation.
-  Filtering is not supported yet, and the parameter currently has no effect.
-  If missing, no filtering is performed.) (type . string)) (pageToken (description . Optional. A token identifying a page of results the server should return.
-  Typically, this is the value of [ListGlossariesResponse.next_page_token]
-  returned from the previous call to `ListGlossaries` method.
-  The first page is returned if `page_token`is empty or missing.) (type . string) (location . query)) (pageSize (type . integer) (location . query) (description . Optional. Requested page size. The server may return fewer glossaries than
-  requested. If unspecified, the server picks an appropriate default.) (format . int32)))
-  response (($ref . ListGlossariesResponse))
-  request: nil
-  
-  Alist Parameters:
-    
-     * parent (string): Required. The name of the project from which to list all of the glossaries.
-    
-     * filter (string): Optional. Filter specifying constraints of a list operation.
-      Filtering is not supported yet, and the parameter currently has no effect.
-      If missing, no filtering is performed.
-    
-     * pageToken (string): Optional. A token identifying a page of results the server should return.
-      Typically, this is the value of [ListGlossariesResponse.next_page_token]
-      returned from the previous call to `ListGlossaries` method.
-      The first page is returned if `page_token`is empty or missing.
-    
-     * pageSize (integer): Optional. Requested page size. The server may return fewer glossaries than
-      requested. If unspecified, the server picks an appropriate default.
-    
-     * alt (string): Data format for response.
-    
-     * access_token (string): OAuth access token.
-    
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
-    
-     * callback (string): JSONP
-    
-     * oauth_token (string): OAuth 2.0 token for the current user.
-    
-     * $.xgafv (string): V1 error format."
-  (let
-      ((parent
-        (google--get-alist 'parent alist t "string" "^projects/[^/]+/locations/[^/]+$"))
-       (filter
-        (google--get-alist 'filter alist nil "string" nil))
-       (pageToken
-        (google--get-alist 'pageToken alist nil "string" nil))
-       (pageSize
-        (google--get-alist 'pageSize alist nil "integer" nil))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
-       (access_token
-        (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
-       (callback
-        (google--get-alist 'callback alist nil "string" nil))
-       (oauth_token
-        (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
-    (let
-        ((request-url
-  	(concat "https://translation.googleapis.com/v3/"
-  		(rfc6570-expand-reserved parent)
-  		"/glossaries"
-  		(google--build-query-string
-  		 (list
-  		  (cons "filter" filter)
-  		  (cons "pageToken" pageToken)
-  		  (cons "pageSize" pageSize)
   		  (cons "alt" alt)
-  		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
   		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
   		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
   		 t)))
          (url-request-method "GET")
          (url-request-data nil)
-         (response-parser 'google--translate-v3:structure-decode:ListGlossariesResponse))
+         (response-parser 'google--translate-v3:structure-decode:Location))
       (if request-handler
   	(funcall request-handler request-url url-request-method url-request-data response-parser)
         (with-current-buffer
@@ -1650,176 +1353,109 @@
   	    (funcall response-parser)
   	  (kill-buffer)))))))
 
-(defun google-translate-v3:projects/locations/glossaries/get (request-handler alist)
-  "Gets a glossary. Returns NOT_FOUND, if the glossary doesn't
-  exist.
+;;;###autoload
+(defun google-translate-v3:projects/locations/batchTranslateText (request-handler alist request-alist)
+  "Translates a large volume of text in asynchronous batch mode.
+  This function provides real-time output as the inputs are being processed.
+  If caller cancels a request, the partial results (for an input file, it's
+  all or nothing) may still be available on the specified output location.
   
-  path v3/{+name}
-  params ((name (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+/glossaries/[^/]+$) (location . path) (description . Required. The name of the glossary to retrieve.)))
-  response (($ref . Glossary))
-  request: nil
+  This call returns immediately and you can
+  use google.longrunning.Operation.name to poll the status of the call.
   
-  Alist Parameters:
-    
-     * name (string): Required. The name of the glossary to retrieve.
-    
-     * alt (string): Data format for response.
-    
-     * access_token (string): OAuth access token.
-    
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
-    
-     * callback (string): JSONP
-    
-     * oauth_token (string): OAuth 2.0 token for the current user.
-    
-     * $.xgafv (string): V1 error format."
-  (let
-      ((name
-        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+/glossaries/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
-       (access_token
-        (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
-       (callback
-        (google--get-alist 'callback alist nil "string" nil))
-       (oauth_token
-        (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
-    (let
-        ((request-url
-  	(concat "https://translation.googleapis.com/v3/"
-  		(rfc6570-expand-reserved name)
-  		(google--build-query-string
-  		 (list
-  		  (cons "alt" alt)
-  		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
-  		  (cons "callback" callback)
-  		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
-  		 t)))
-         (url-request-method "GET")
-         (url-request-data nil)
-         (response-parser 'google--translate-v3:structure-decode:Glossary))
-      (if request-handler
-  	(funcall request-handler request-url url-request-method url-request-data response-parser)
-        (with-current-buffer
-  	  (url-retrieve-synchronously request-url nil nil google-default-timeout)
-  	(goto-char url-http-end-of-headers)
-  	(prog1
-  	    (funcall response-parser)
-  	  (kill-buffer)))))))
-
-(defun google-translate-v3:projects/locations/glossaries/create (request-handler alist request-alist)
-  "Creates a glossary and returns the long-running operation. Returns
-  NOT_FOUND, if the project doesn't exist.
+  path v3/{+parent}:batchTranslateText
+  params ((parent (location . path) (description . Required. Location to make a call. Must refer to a caller's project.
   
-  path v3/{+parent}/glossaries
-  params ((parent (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$) (location . path) (description . Required. The project name.)))
+  Format: `projects/{project-number-or-id}/locations/{location-id}`.
+  
+  The `global` location is not supported for batch translation.
+  
+  Only AutoML Translation models or glossaries within the same region (have
+  the same location-id) can be used, otherwise an INVALID_ARGUMENT (400)
+  error is returned.) (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$)))
   response (($ref . Operation))
-  request: (($ref . Glossary))
+  request: (($ref . BatchTranslateTextRequest))
   
   Alist Parameters:
     
-     * parent (string): Required. The project name.
-    
-     * alt (string): Data format for response.
+     * $.xgafv (string): V1 error format.
     
      * access_token (string): OAuth access token.
     
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+     * alt (string): Data format for response.
     
      * callback (string): JSONP
     
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
      * oauth_token (string): OAuth 2.0 token for the current user.
     
-     * $.xgafv (string): V1 error format."
+     * parent (string): Required. Location to make a call. Must refer to a caller's project.
+      
+      Format: `projects/{project-number-or-id}/locations/{location-id}`.
+      
+      The `global` location is not supported for batch translation.
+      
+      Only AutoML Translation models or glossaries within the same region (have
+      the same location-id) can be used, otherwise an INVALID_ARGUMENT (400)
+      error is returned.
+    
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
   (let
-      ((parent
-        (google--get-alist 'parent alist t "string" "^projects/[^/]+/locations/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
        (access_token
         (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
        (callback
         (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
        (oauth_token
         (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
+       (parent
+        (google--get-alist 'parent alist t "string" "^projects/[^/]+/locations/[^/]+$"))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
     (let
         ((request-url
   	(concat "https://translation.googleapis.com/v3/"
   		(rfc6570-expand-reserved parent)
-  		"/glossaries"
+  		":batchTranslateText"
   		(google--build-query-string
   		 (list
-  		  (cons "alt" alt)
+  		  (cons "$.xgafv" $\.xgafv)
   		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
+  		  (cons "alt" alt)
   		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
   		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
   		 t)))
          (url-request-method "POST")
          (url-request-data
-  	(google--translate-v3:structure-encode:Glossary request-alist))
+  	(google--translate-v3:structure-encode:BatchTranslateTextRequest request-alist))
          (response-parser 'google--translate-v3:structure-decode:Operation))
       (if request-handler
   	(funcall request-handler request-url url-request-method url-request-data response-parser)
@@ -1832,6 +1468,7 @@
 
 ;; Resource projects.locations.operations:
 
+;;;###autoload
 (defun google-translate-v3:projects/locations/operations/cancel (request-handler alist request-alist)
   "Starts asynchronous cancellation on a long-running operation.  The server
   makes a best effort to cancel the operation, but success is not
@@ -1845,60 +1482,60 @@
   corresponding to `Code.CANCELLED`.
   
   path v3/{+name}:cancel
-  params ((name (description . The name of the operation resource to be cancelled.) (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+/operations/[^/]+$) (location . path)))
+  params ((name (pattern . ^projects/[^/]+/locations/[^/]+/operations/[^/]+$) (location . path) (description . The name of the operation resource to be cancelled.) (required . t) (type . string)))
   response (($ref . Empty))
   request: (($ref . CancelOperationRequest))
   
   Alist Parameters:
     
-     * name (string): The name of the operation resource to be cancelled.
-    
-     * alt (string): Data format for response.
+     * $.xgafv (string): V1 error format.
     
      * access_token (string): OAuth access token.
     
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+     * alt (string): Data format for response.
     
      * callback (string): JSONP
     
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * name (string): The name of the operation resource to be cancelled.
+    
      * oauth_token (string): OAuth 2.0 token for the current user.
     
-     * $.xgafv (string): V1 error format."
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
   (let
-      ((name
-        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+/operations/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
        (access_token
         (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
        (callback
         (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (name
+        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+/operations/[^/]+$"))
        (oauth_token
         (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
     (let
         ((request-url
   	(concat "https://translation.googleapis.com/v3/"
@@ -1906,17 +1543,17 @@
   		":cancel"
   		(google--build-query-string
   		 (list
-  		  (cons "alt" alt)
+  		  (cons "$.xgafv" $\.xgafv)
   		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
+  		  (cons "alt" alt)
   		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
   		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
   		 t)))
          (url-request-method "POST")
          (url-request-data
@@ -1931,6 +1568,7 @@
   	    (funcall response-parser)
   	  (kill-buffer)))))))
 
+;;;###autoload
 (defun google-translate-v3:projects/locations/operations/delete (request-handler alist)
   "Deletes a long-running operation. This method indicates that the client is
   no longer interested in the operation result. It does not cancel the
@@ -1944,71 +1582,71 @@
   
   Alist Parameters:
     
-     * name (string): The name of the operation resource to be deleted.
-    
-     * alt (string): Data format for response.
+     * $.xgafv (string): V1 error format.
     
      * access_token (string): OAuth access token.
     
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+     * alt (string): Data format for response.
     
      * callback (string): JSONP
     
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * name (string): The name of the operation resource to be deleted.
+    
      * oauth_token (string): OAuth 2.0 token for the current user.
     
-     * $.xgafv (string): V1 error format."
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
   (let
-      ((name
-        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+/operations/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
        (access_token
         (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
        (callback
         (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (name
+        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+/operations/[^/]+$"))
        (oauth_token
         (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
     (let
         ((request-url
   	(concat "https://translation.googleapis.com/v3/"
   		(rfc6570-expand-reserved name)
   		(google--build-query-string
   		 (list
-  		  (cons "alt" alt)
+  		  (cons "$.xgafv" $\.xgafv)
   		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
+  		  (cons "alt" alt)
   		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
   		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
   		 t)))
          (url-request-method "DELETE")
          (url-request-data nil)
@@ -2022,6 +1660,7 @@
   	    (funcall response-parser)
   	  (kill-buffer)))))))
 
+;;;###autoload
 (defun google-translate-v3:projects/locations/operations/list (request-handler alist)
   "Lists operations that match the specified filter in the request. If the
   server doesn't support this method, it returns `UNIMPLEMENTED`.
@@ -2035,72 +1674,72 @@
   is the parent resource, without the operations collection id.
   
   path v3/{+name}/operations
-  params ((name (location . path) (description . The name of the operation's parent resource.) (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$)) (pageToken (description . The standard list page token.) (type . string) (location . query)) (pageSize (type . integer) (location . query) (description . The standard list page size.) (format . int32)) (filter (type . string) (location . query) (description . The standard list filter.)))
+  params ((filter (description . The standard list filter.) (type . string) (location . query)) (name (pattern . ^projects/[^/]+/locations/[^/]+$) (location . path) (description . The name of the operation's parent resource.) (required . t) (type . string)) (pageToken (location . query) (description . The standard list page token.) (type . string)) (pageSize (type . integer) (location . query) (description . The standard list page size.) (format . int32)))
   response (($ref . ListOperationsResponse))
   request: nil
   
   Alist Parameters:
     
-     * name (string): The name of the operation's parent resource.
-    
-     * pageToken (string): The standard list page token.
-    
-     * pageSize (integer): The standard list page size.
-    
-     * filter (string): The standard list filter.
-    
-     * alt (string): Data format for response.
+     * $.xgafv (string): V1 error format.
     
      * access_token (string): OAuth access token.
     
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+     * alt (string): Data format for response.
     
      * callback (string): JSONP
     
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * filter (string): The standard list filter.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * name (string): The name of the operation's parent resource.
+    
      * oauth_token (string): OAuth 2.0 token for the current user.
     
-     * $.xgafv (string): V1 error format."
+     * pageSize (integer): The standard list page size.
+    
+     * pageToken (string): The standard list page token.
+    
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
   (let
-      ((name
-        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+$"))
-       (pageToken
-        (google--get-alist 'pageToken alist nil "string" nil))
-       (pageSize
-        (google--get-alist 'pageSize alist nil "integer" nil))
-       (filter
-        (google--get-alist 'filter alist nil "string" nil))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
        (access_token
         (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
        (callback
         (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (filter
+        (google--get-alist 'filter alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (name
+        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+$"))
        (oauth_token
         (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
+       (pageSize
+        (google--get-alist 'pageSize alist nil "integer" nil))
+       (pageToken
+        (google--get-alist 'pageToken alist nil "string" nil))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
     (let
         ((request-url
   	(concat "https://translation.googleapis.com/v3/"
@@ -2108,20 +1747,20 @@
   		"/operations"
   		(google--build-query-string
   		 (list
-  		  (cons "pageToken" pageToken)
-  		  (cons "pageSize" pageSize)
-  		  (cons "filter" filter)
-  		  (cons "alt" alt)
+  		  (cons "$.xgafv" $\.xgafv)
   		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
+  		  (cons "alt" alt)
   		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "filter" filter)
+  		  (cons "key" key)
   		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
+  		  (cons "pageSize" pageSize)
+  		  (cons "pageToken" pageToken)
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
   		 t)))
          (url-request-method "GET")
          (url-request-data nil)
@@ -2135,83 +1774,84 @@
   	    (funcall response-parser)
   	  (kill-buffer)))))))
 
+;;;###autoload
 (defun google-translate-v3:projects/locations/operations/get (request-handler alist)
   "Gets the latest state of a long-running operation.  Clients can use this
   method to poll the operation result at intervals as recommended by the API
   service.
   
   path v3/{+name}
-  params ((name (pattern . ^projects/[^/]+/locations/[^/]+/operations/[^/]+$) (location . path) (description . The name of the operation resource.) (required . t) (type . string)))
+  params ((name (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+/operations/[^/]+$) (location . path) (description . The name of the operation resource.)))
   response (($ref . Operation))
   request: nil
   
   Alist Parameters:
     
-     * name (string): The name of the operation resource.
-    
-     * alt (string): Data format for response.
+     * $.xgafv (string): V1 error format.
     
      * access_token (string): OAuth access token.
     
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+     * alt (string): Data format for response.
     
      * callback (string): JSONP
     
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * name (string): The name of the operation resource.
+    
      * oauth_token (string): OAuth 2.0 token for the current user.
     
-     * $.xgafv (string): V1 error format."
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
   (let
-      ((name
-        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+/operations/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
        (access_token
         (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
        (callback
         (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (name
+        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+/operations/[^/]+$"))
        (oauth_token
         (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
     (let
         ((request-url
   	(concat "https://translation.googleapis.com/v3/"
   		(rfc6570-expand-reserved name)
   		(google--build-query-string
   		 (list
-  		  (cons "alt" alt)
+  		  (cons "$.xgafv" $\.xgafv)
   		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
+  		  (cons "alt" alt)
   		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
   		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
   		 t)))
          (url-request-method "GET")
          (url-request-data nil)
@@ -2225,6 +1865,7 @@
   	    (funcall response-parser)
   	  (kill-buffer)))))))
 
+;;;###autoload
 (defun google-translate-v3:projects/locations/operations/wait (request-handler alist request-alist)
   "Waits for the specified long-running operation until it is done or reaches
   at most a specified timeout, returning the latest state.  If the operation
@@ -2243,54 +1884,54 @@
   
   Alist Parameters:
     
-     * name (string): The name of the operation resource to wait on.
-    
-     * alt (string): Data format for response.
+     * $.xgafv (string): V1 error format.
     
      * access_token (string): OAuth access token.
     
-     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
-    
-     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\").
-    
-     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
-    
-     * prettyPrint (boolean): Returns response with indentations and line breaks.
-    
-     * fields (string): Selector specifying which fields to include in a partial response.
-    
-     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+     * alt (string): Data format for response.
     
      * callback (string): JSONP
     
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * name (string): The name of the operation resource to wait on.
+    
      * oauth_token (string): OAuth 2.0 token for the current user.
     
-     * $.xgafv (string): V1 error format."
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
   (let
-      ((name
-        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+/operations/[^/]+$"))
-       (alt
-        (google--get-alist 'alt alist nil "string" nil))
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
        (access_token
         (google--get-alist 'access_token alist nil "string" nil))
-       (key
-        (google--get-alist 'key alist nil "string" nil))
-       (upload_protocol
-        (google--get-alist 'upload_protocol alist nil "string" nil))
-       (quotaUser
-        (google--get-alist 'quotaUser alist nil "string" nil))
-       (prettyPrint
-        (google--get-alist 'prettyPrint alist nil "boolean" nil))
-       (fields
-        (google--get-alist 'fields alist nil "string" nil))
-       (uploadType
-        (google--get-alist 'uploadType alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
        (callback
         (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (name
+        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+/operations/[^/]+$"))
        (oauth_token
         (google--get-alist 'oauth_token alist nil "string" nil))
-       ($\.xgafv
-        (google--get-alist '$\.xgafv alist nil "string" nil)))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
     (let
         ((request-url
   	(concat "https://translation.googleapis.com/v3/"
@@ -2298,21 +1939,414 @@
   		":wait"
   		(google--build-query-string
   		 (list
-  		  (cons "alt" alt)
+  		  (cons "$.xgafv" $\.xgafv)
   		  (cons "access_token" access_token)
-  		  (cons "key" key)
-  		  (cons "upload_protocol" upload_protocol)
-  		  (cons "quotaUser" quotaUser)
-  		  (cons "prettyPrint" prettyPrint)
-  		  (cons "fields" fields)
-  		  (cons "uploadType" uploadType)
+  		  (cons "alt" alt)
   		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
   		  (cons "oauth_token" oauth_token)
-  		  (cons "$.xgafv" $\.xgafv))
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
   		 t)))
          (url-request-method "POST")
          (url-request-data
   	(google--translate-v3:structure-encode:WaitOperationRequest request-alist))
+         (response-parser 'google--translate-v3:structure-decode:Operation))
+      (if request-handler
+  	(funcall request-handler request-url url-request-method url-request-data response-parser)
+        (with-current-buffer
+  	  (url-retrieve-synchronously request-url nil nil google-default-timeout)
+  	(goto-char url-http-end-of-headers)
+  	(prog1
+  	    (funcall response-parser)
+  	  (kill-buffer)))))))
+
+;; Resource projects.locations.glossaries:
+
+;;;###autoload
+(defun google-translate-v3:projects/locations/glossaries/delete (request-handler alist)
+  "Deletes a glossary, or cancels glossary construction
+  if the glossary isn't created yet.
+  Returns NOT_FOUND, if the glossary doesn't exist.
+  
+  path v3/{+name}
+  params ((name (description . Required. The name of the glossary to delete.) (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+/glossaries/[^/]+$) (location . path)))
+  response (($ref . Operation))
+  request: nil
+  
+  Alist Parameters:
+    
+     * $.xgafv (string): V1 error format.
+    
+     * access_token (string): OAuth access token.
+    
+     * alt (string): Data format for response.
+    
+     * callback (string): JSONP
+    
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * name (string): Required. The name of the glossary to delete.
+    
+     * oauth_token (string): OAuth 2.0 token for the current user.
+    
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
+  (let
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
+       (access_token
+        (google--get-alist 'access_token alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
+       (callback
+        (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (name
+        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+/glossaries/[^/]+$"))
+       (oauth_token
+        (google--get-alist 'oauth_token alist nil "string" nil))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
+    (let
+        ((request-url
+  	(concat "https://translation.googleapis.com/v3/"
+  		(rfc6570-expand-reserved name)
+  		(google--build-query-string
+  		 (list
+  		  (cons "$.xgafv" $\.xgafv)
+  		  (cons "access_token" access_token)
+  		  (cons "alt" alt)
+  		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
+  		  (cons "oauth_token" oauth_token)
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
+  		 t)))
+         (url-request-method "DELETE")
+         (url-request-data nil)
+         (response-parser 'google--translate-v3:structure-decode:Operation))
+      (if request-handler
+  	(funcall request-handler request-url url-request-method url-request-data response-parser)
+        (with-current-buffer
+  	  (url-retrieve-synchronously request-url nil nil google-default-timeout)
+  	(goto-char url-http-end-of-headers)
+  	(prog1
+  	    (funcall response-parser)
+  	  (kill-buffer)))))))
+
+;;;###autoload
+(defun google-translate-v3:projects/locations/glossaries/list (request-handler alist)
+  "Lists glossaries in a project. Returns NOT_FOUND, if the project doesn't
+  exist.
+  
+  path v3/{+parent}/glossaries
+  params ((pageToken (type . string) (location . query) (description . Optional. A token identifying a page of results the server should return.
+  Typically, this is the value of [ListGlossariesResponse.next_page_token]
+  returned from the previous call to `ListGlossaries` method.
+  The first page is returned if `page_token`is empty or missing.)) (pageSize (location . query) (description . Optional. Requested page size. The server may return fewer glossaries than
+  requested. If unspecified, the server picks an appropriate default.) (format . int32) (type . integer)) (parent (location . path) (description . Required. The name of the project from which to list all of the glossaries.) (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$)) (filter (type . string) (location . query) (description . Optional. Filter specifying constraints of a list operation.
+  Filtering is not supported yet, and the parameter currently has no effect.
+  If missing, no filtering is performed.)))
+  response (($ref . ListGlossariesResponse))
+  request: nil
+  
+  Alist Parameters:
+    
+     * $.xgafv (string): V1 error format.
+    
+     * access_token (string): OAuth access token.
+    
+     * alt (string): Data format for response.
+    
+     * callback (string): JSONP
+    
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * filter (string): Optional. Filter specifying constraints of a list operation.
+      Filtering is not supported yet, and the parameter currently has no effect.
+      If missing, no filtering is performed.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * oauth_token (string): OAuth 2.0 token for the current user.
+    
+     * pageSize (integer): Optional. Requested page size. The server may return fewer glossaries than
+      requested. If unspecified, the server picks an appropriate default.
+    
+     * pageToken (string): Optional. A token identifying a page of results the server should return.
+      Typically, this is the value of [ListGlossariesResponse.next_page_token]
+      returned from the previous call to `ListGlossaries` method.
+      The first page is returned if `page_token`is empty or missing.
+    
+     * parent (string): Required. The name of the project from which to list all of the glossaries.
+    
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
+  (let
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
+       (access_token
+        (google--get-alist 'access_token alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
+       (callback
+        (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (filter
+        (google--get-alist 'filter alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (oauth_token
+        (google--get-alist 'oauth_token alist nil "string" nil))
+       (pageSize
+        (google--get-alist 'pageSize alist nil "integer" nil))
+       (pageToken
+        (google--get-alist 'pageToken alist nil "string" nil))
+       (parent
+        (google--get-alist 'parent alist t "string" "^projects/[^/]+/locations/[^/]+$"))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
+    (let
+        ((request-url
+  	(concat "https://translation.googleapis.com/v3/"
+  		(rfc6570-expand-reserved parent)
+  		"/glossaries"
+  		(google--build-query-string
+  		 (list
+  		  (cons "$.xgafv" $\.xgafv)
+  		  (cons "access_token" access_token)
+  		  (cons "alt" alt)
+  		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "filter" filter)
+  		  (cons "key" key)
+  		  (cons "oauth_token" oauth_token)
+  		  (cons "pageSize" pageSize)
+  		  (cons "pageToken" pageToken)
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
+  		 t)))
+         (url-request-method "GET")
+         (url-request-data nil)
+         (response-parser 'google--translate-v3:structure-decode:ListGlossariesResponse))
+      (if request-handler
+  	(funcall request-handler request-url url-request-method url-request-data response-parser)
+        (with-current-buffer
+  	  (url-retrieve-synchronously request-url nil nil google-default-timeout)
+  	(goto-char url-http-end-of-headers)
+  	(prog1
+  	    (funcall response-parser)
+  	  (kill-buffer)))))))
+
+;;;###autoload
+(defun google-translate-v3:projects/locations/glossaries/get (request-handler alist)
+  "Gets a glossary. Returns NOT_FOUND, if the glossary doesn't
+  exist.
+  
+  path v3/{+name}
+  params ((name (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+/glossaries/[^/]+$) (location . path) (description . Required. The name of the glossary to retrieve.)))
+  response (($ref . Glossary))
+  request: nil
+  
+  Alist Parameters:
+    
+     * $.xgafv (string): V1 error format.
+    
+     * access_token (string): OAuth access token.
+    
+     * alt (string): Data format for response.
+    
+     * callback (string): JSONP
+    
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * name (string): Required. The name of the glossary to retrieve.
+    
+     * oauth_token (string): OAuth 2.0 token for the current user.
+    
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
+  (let
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
+       (access_token
+        (google--get-alist 'access_token alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
+       (callback
+        (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (name
+        (google--get-alist 'name alist t "string" "^projects/[^/]+/locations/[^/]+/glossaries/[^/]+$"))
+       (oauth_token
+        (google--get-alist 'oauth_token alist nil "string" nil))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
+    (let
+        ((request-url
+  	(concat "https://translation.googleapis.com/v3/"
+  		(rfc6570-expand-reserved name)
+  		(google--build-query-string
+  		 (list
+  		  (cons "$.xgafv" $\.xgafv)
+  		  (cons "access_token" access_token)
+  		  (cons "alt" alt)
+  		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
+  		  (cons "oauth_token" oauth_token)
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
+  		 t)))
+         (url-request-method "GET")
+         (url-request-data nil)
+         (response-parser 'google--translate-v3:structure-decode:Glossary))
+      (if request-handler
+  	(funcall request-handler request-url url-request-method url-request-data response-parser)
+        (with-current-buffer
+  	  (url-retrieve-synchronously request-url nil nil google-default-timeout)
+  	(goto-char url-http-end-of-headers)
+  	(prog1
+  	    (funcall response-parser)
+  	  (kill-buffer)))))))
+
+;;;###autoload
+(defun google-translate-v3:projects/locations/glossaries/create (request-handler alist request-alist)
+  "Creates a glossary and returns the long-running operation. Returns
+  NOT_FOUND, if the project doesn't exist.
+  
+  path v3/{+parent}/glossaries
+  params ((parent (location . path) (description . Required. The project name.) (required . t) (type . string) (pattern . ^projects/[^/]+/locations/[^/]+$)))
+  response (($ref . Operation))
+  request: (($ref . Glossary))
+  
+  Alist Parameters:
+    
+     * $.xgafv (string): V1 error format.
+    
+     * access_token (string): OAuth access token.
+    
+     * alt (string): Data format for response.
+    
+     * callback (string): JSONP
+    
+     * fields (string): Selector specifying which fields to include in a partial response.
+    
+     * key (string): API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.
+    
+     * oauth_token (string): OAuth 2.0 token for the current user.
+    
+     * parent (string): Required. The project name.
+    
+     * prettyPrint (boolean): Returns response with indentations and line breaks.
+    
+     * quotaUser (string): Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.
+    
+     * uploadType (string): Legacy upload protocol for media (e.g. \"media\", \"multipart\").
+    
+     * upload_protocol (string): Upload protocol for media (e.g. \"raw\", \"multipart\")."
+  (let
+      (($\.xgafv
+        (google--get-alist '$\.xgafv alist nil "string" nil))
+       (access_token
+        (google--get-alist 'access_token alist nil "string" nil))
+       (alt
+        (google--get-alist 'alt alist nil "string" nil))
+       (callback
+        (google--get-alist 'callback alist nil "string" nil))
+       (fields
+        (google--get-alist 'fields alist nil "string" nil))
+       (key
+        (google--get-alist 'key alist nil "string" nil))
+       (oauth_token
+        (google--get-alist 'oauth_token alist nil "string" nil))
+       (parent
+        (google--get-alist 'parent alist t "string" "^projects/[^/]+/locations/[^/]+$"))
+       (prettyPrint
+        (google--get-alist 'prettyPrint alist nil "boolean" nil))
+       (quotaUser
+        (google--get-alist 'quotaUser alist nil "string" nil))
+       (uploadType
+        (google--get-alist 'uploadType alist nil "string" nil))
+       (upload_protocol
+        (google--get-alist 'upload_protocol alist nil "string" nil)))
+    (let
+        ((request-url
+  	(concat "https://translation.googleapis.com/v3/"
+  		(rfc6570-expand-reserved parent)
+  		"/glossaries"
+  		(google--build-query-string
+  		 (list
+  		  (cons "$.xgafv" $\.xgafv)
+  		  (cons "access_token" access_token)
+  		  (cons "alt" alt)
+  		  (cons "callback" callback)
+  		  (cons "fields" fields)
+  		  (cons "key" key)
+  		  (cons "oauth_token" oauth_token)
+  		  (cons "prettyPrint" prettyPrint)
+  		  (cons "quotaUser" quotaUser)
+  		  (cons "uploadType" uploadType)
+  		  (cons "upload_protocol" upload_protocol))
+  		 t)))
+         (url-request-method "POST")
+         (url-request-data
+  	(google--translate-v3:structure-encode:Glossary request-alist))
          (response-parser 'google--translate-v3:structure-decode:Operation))
       (if request-handler
   	(funcall request-handler request-url url-request-method url-request-data response-parser)

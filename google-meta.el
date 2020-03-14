@@ -171,6 +171,7 @@
 		 (setf doc-string (concat doc-string (google--indent-by-two (format "\n\n * %s (%s): %s" (car property) type (google--indent-by-two description)))))))
 	 properties)
     (with-current-buffer google--buffer
+      (insert "\n;;;###autoload")
       (insert "\n(defun " (symbol-name function-name) " (" (mapconcat 'prin1-to-string args " ") ")\n  \"" (google--escape-dbl-quotes (google--indent-by-two doc-string)) "\"")
       (insert (google--indent-by-two (concat "\n" (mapconcat 'pp-to-string expressions "\n"))))
       (let ((end (point)))
@@ -307,7 +308,8 @@
 	   (local-description (format "path %s\nparams %s\nresponse %s\nrequest: %s" path parameters response request))
 	   (doc-string ;(replace-regexp-in-string "\"" "\\\""
 	    (if local-description (concat description "\n\n" local-description) description)); t t))
-	   (all-parameters (append parameters google--parameters))
+	   (all-parameters
+	    (sort (copy-list (append parameters google--parameters)) (lambda (a b) (string< (car a) (car b)))))
 	   (expression
 	    `(let ,(mapcar (lambda (parameter)
 			     (let ((name (first parameter)))
